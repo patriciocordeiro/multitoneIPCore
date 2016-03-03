@@ -1,0 +1,35 @@
+--library ieee;
+--use iee.std_logic_1164;
+--
+--entity accumPhaseShifter is
+--	port{
+--	clk: in std_logic;
+--	cntOut: out integer range 0 t0 1000;
+--	cntOutTrunc: out integer range 0 t0 500
+--	};
+--	end; 
+--	
+--	architecture rtl of accumPhaseShifter is
+--	begin
+--		process(clk)
+--		variable cnt: integer range 0 t0 1000;
+--		variable cnt_trunc: integer range 0 t0 500;
+--		begin
+--			if rising_edge(clk) then
+--				if (cnt<1000) then
+--					cnt:=cnt+1;
+--					
+--				else
+--					cnt:=0;
+--				end if;
+--				cnt_trunc := cnt( 0 to 500);
+--				cntOut<= cnt;
+--				cntOutTrunc: cnt_trunc;
+--			end if;
+--		end process;
+--	end rtl;
+--		
+--		
+		
+	
+	
