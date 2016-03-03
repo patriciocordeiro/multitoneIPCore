@@ -340,18 +340,18 @@ applicable agreement for further details.
 		(type "PARAMETER_UNSIGNED_DEC")	)
 	(parameter
 		"N"
-		"10"
+		"12"
 		""
 		(type "PARAMETER_UNSIGNED_DEC")	)
 	(parameter
 		"LTP"
-		"8"
+		"12"
 		""
 		(type "PARAMETER_UNSIGNED_DEC")	)
 	(drawing
 		(rectangle (rect 16 16 160 160))
 	)
-	(annotation_block (parameter)(rect 376 480 595 550))
+	(annotation_block (parameter)(rect 376 480 600 568))
 )
 (connector
 	(pt 680 328)
