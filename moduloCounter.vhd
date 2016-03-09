@@ -22,7 +22,7 @@ entity moduloCounter is
 		mflag: out  std_logic;
 		output : out  integer range -8192 to 8191;
 		sinef : out  integer range -8192 to 8191;
-
+    sine : out  integer range -8192 to 8191;
 		--sign_cnt: out integer range 0 to 2**N-1;
 		firstIteration : out std_logic
 	
@@ -32,20 +32,26 @@ entity moduloCounter is
 	
 	constant temp:	integer range 0 to fc:= fc/fo;
 	constant M: integer range 0 to (2**N)-1:= 2**N/temp+1;
-	constant Mtrunc: integer range 0 to 300:=(M*(2**LTP))/2**N;
+	constant Mtrunc: unsigned (0 to 7):=to_unsigned((M*(2**LTP))/2**N,8);
 	--constant Mtrunc: integer range 0 to 300:=1;
 	constant hN: unsigned(0 to N-1):= to_unsigned(2**(N-1), N);
 	constant oneQtSize: unsigned (0 to LTP-1 ):= to_unsigned(2**(LTP-2),LTP); --one quater sine wave size
-	constant acummToLutStep: integer range 0 to 2**(N-LTP):=2**(N-LTP); -- accumulator to lut step
-	constant limit: unsigned(0 to N-1):=(to_unsigned(2**(N-1) ,N) + to_unsigned(2*acummToLutStep,N))/Mtrunc -1;
-		
+	constant acummToLutStep: unsigned ( 0 to N-LTP-1):=to_unsigned(2*(2**(N-LTP)),N-LTP);
+	--constant acummToLutStep: unsigned ( 0 to N-LTP):=to_unsigned(2**(N-LTP),N-LTP); -- accumulator to lut step
+	--constant limit: unsigned(0 to N-1):=(to_unsigned(2**(N-1) ,N) + to_unsigned(2*acummToLutStep,N))/Mtrunc -1;
+	constant limit: unsigned(0 to N-1):= to_unsigned(2**N-1 ,N) + acummToLutStep/Mtrunc -1;
+
 	
 	signal cnt_temp: unsigned(0 to N-1):=to_unsigned(0,N);
-	signal lutAddr: integer range 0 to 2**LTP-1;
-	signal sine :integer range -8192 to 8191;
-	signal sign_cnt_temp: integer range 0 to 2**N-1:=0;
-	signal lutAddrM: integer range 0 to  2**LTP-1;
-	signal fullLutAddr: integer range 0 to  2**N-1;
+	signal lutAddr: unsigned (0 to LTP-1);
+	--signal sine :unsigned (0 to 13); 
+	signal sign_cnt_temp: unsigned (0 to N-1):= to_unsigned(0,N);
+	signal lutAddrM: unsigned (0 to  2*LTP-1);
+	signal fullLutAddrTemp: unsigned (0 to  N-1);
+	signal fullLutAddr: integer range 0 to 2**N-1;
+	signal lutTrunc: integer range 0 to 2**N-1;
+	signal tempAddrTrunc  : unsigned (0 to LTP-1);
+	signal alertZero : std_logic:='0';
 	--signal	sign_cnt: integer range 0 to 2**N-1:=0; 
 	--signal c2tmp: unsigned (0 to LTP):=to_unsigned(0,N);
 
@@ -55,7 +61,8 @@ entity moduloCounter is
 	 
 	   variable flag: std_logic:='0';
 	   variable firstIter: std_logic:='1'; -- signaling  the first iteration 
-	   variable lutAddrPrev: integer range 0 to 2**LTP-1;
+	   variable lutAddrPrev: unsigned (0 to LTP-1);
+	
 	  
 		begin
 		
@@ -67,7 +74,7 @@ entity moduloCounter is
 					if (sign_cnt_temp < 2) then
 					  sign_cnt_temp <= sign_cnt_temp + 1; --increment till first two positive sine quadrant
 					else 
-					  sign_cnt_temp <= 1;--restart the counter to one
+					  sign_cnt_temp <= to_unsigned(1, N);--restart the counter to one
 					end if ;
 			end if;
 		 ----------------------------------------------------------------
@@ -77,26 +84,26 @@ entity moduloCounter is
 				--@@@@-------------------------------------------------
 				if (firstIter = '0') then 
 					--prevent the repetition of zero value
-					cnt_temp<= cnt_temp + to_unsigned(acummToLutStep, N);
+					cnt_temp<= cnt_temp + (acummToLutStep);
 						--fullLutAddr<= to_integer(cnt_temp);
 					firstIter :='1';
 				else
 					cnt_temp <= cnt_temp + 1;
 					--fullLutAddr<= to_integer(cnt_temp);
 				
-					lutAddr <= to_integer(cnt_temp(0 to LTP-2));
+					lutAddr <= (cnt_temp(0 to LTP-1));
 				end if;
 			   --@@@@--------------------------------------------------
 			else
 				flag:='1'; --  counter will decrement
 					if (firstIter = '1') then 
 					--prevent the repetition of zero value by jumping one step
-						cnt_temp<= cnt_temp - to_unsigned(acummToLutStep, N);
+						cnt_temp<= cnt_temp - (acummToLutStep);
 						firstIter := '0'; 
 							--fullLutAddr<= to_integer(cnt_temp);
 					else
 						cnt_temp <= cnt_temp - 1;
-						lutAddr <= to_integer(cnt_temp(0 to LTP-2)); -- lookup table truncated counter
+						lutAddr <= (cnt_temp(0 to LTP-1)); -- lookup table truncated counter
 							--fullLutAddr<= to_integer(cnt_temp);
 					end if;
 			end if;
@@ -104,7 +111,9 @@ entity moduloCounter is
 				------------------------------
 				if(lutAddrPrev/=lutAddr OR lutAddr=0) then
 					lutAddrM <= lutAddr*Mtrunc;
-					
+				  tempAddrTrunc<= lutAddrM(4 to 7+4);
+					--lutTrunc <= to_integer(tempAddrTrunc);
+				
 				else
 					lutAddrPrev := lutAddr;
 				end if;
@@ -112,10 +121,18 @@ entity moduloCounter is
 				
 				--&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 				--full counter
-				if (fullLutAddr + M < (2**N-1)) then 
-					fullLutAddr <= fullLutAddr + M;
+				if (fullLutAddrTemp < (2**N-1)- M) then 
+					fullLutAddrTemp <= fullLutAddrTemp + M;
+					fullLutAddr <= to_integer(fullLutAddrTemp);
+					tempAddrTrunc<= fullLutAddrTemp(0 to 7);
+					lutTrunc <= to_integer(tempAddrTrunc);
+					alertZero  <='0';
 				else 
-					fullLutAddr <= 0;
+				  alertZero <= '1';
+					fullLutAddrTemp <= to_unsigned(0,N);
+					fullLutAddr <= to_integer(fullLutAddrTemp);
+					tempAddrTrunc<= fullLutAddrTemp(0 to 7);
+					lutTrunc <= to_integer(tempAddrTrunc);
 				end if;
 				--&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 				
@@ -129,10 +146,10 @@ entity moduloCounter is
 		firstIteration <=firstIter;
   	end process;
   	
-  	process(clk, lutAddrM)
+  	process(clk, lutTrunc)
 		begin
 	   if rising_edge(clk) then
-			case lutAddrM is
+			case lutTrunc is
  when 0 => sine <= 0;
  when 1 => sine <= 201;
  when 2 => sine <= 402;
@@ -391,18 +408,18 @@ entity moduloCounter is
  when 255 => sine <= -201;
  when others => sine <=0;
 			end case;
-		if (sign_cnt_temp < 2) then
-        output <= sine;
-    else
-        output <= -sine;
-    end if;
+	--	if (sign_cnt_temp < 2) then
+       -- output <= sine;
+   -- else
+     --   output <= -sine;
+   -- end if;
   
     end if;
 	end process;
-
+--
 process(clk, fullLutAddr)
 begin
-	if rising_edge(clk) then
+ 	if rising_edge(clk) then
 	 case fullLutAddr is
 	 when 0 => sinef <= 0;
  when 1 => sinef <= 13;
