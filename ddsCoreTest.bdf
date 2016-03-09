@@ -317,8 +317,8 @@ applicable agreement for further details.
 	(port
 		(pt 176 112)
 		(output)
-		(text "sinef[13..0]" (rect 0 0 56 12)(font "Arial" ))
-		(text "sinef[13..0]" (rect 108 107 164 119)(font "Arial" ))
+		(text "sine[13..0]" (rect 0 0 51 12)(font "Arial" ))
+		(text "sine[13..0]" (rect 112 107 163 119)(font "Arial" ))
 		(line (pt 176 112)(pt 160 112)(line_width 3))
 	)
 	(port
@@ -330,7 +330,7 @@ applicable agreement for further details.
 	)
 	(parameter
 		"fo"
-		"1000000"
+		"25000000"
 		""
 		(type "PARAMETER_UNSIGNED_DEC")	)
 	(parameter
@@ -345,13 +345,13 @@ applicable agreement for further details.
 		(type "PARAMETER_UNSIGNED_DEC")	)
 	(parameter
 		"LTP"
-		"12"
+		"8"
 		""
 		(type "PARAMETER_UNSIGNED_DEC")	)
 	(drawing
 		(rectangle (rect 16 16 160 160))
 	)
-	(annotation_block (parameter)(rect 376 480 600 568))
+	(annotation_block (parameter)(rect 376 480 595 550))
 )
 (connector
 	(pt 680 328)
@@ -465,13 +465,13 @@ applicable agreement for further details.
 	(pt 368 632)
 )
 (connector
-	(pt 544 712)
 	(pt 760 712)
+	(pt 760 456)
 	(bus)
 )
 (connector
-	(pt 760 456)
 	(pt 760 712)
+	(pt 544 712)
 	(bus)
 )
 (junction (pt 680 328))
